@@ -19,8 +19,6 @@ requirements:
     - future
     - glog
     - lmdb
-    - mkl-include
-    - mkl
     - numpy
     - opencv
     - python
@@ -30,8 +28,6 @@ requirements:
     - future
     - glog
     - lmdb
-    - mkl
-    - mkl-include
     - numpy
     - opencv
     - protobuf

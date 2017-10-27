@@ -22,7 +22,7 @@ set -ex
 
 echo "Installing caffe2 to ${PREFIX}"
 
-PYTHON_ARGS="$(python ./scripts/get_python_cmake_flags.py)"
+PYTHON_ARGS="$(python ./scripts/get_python_cmake_flags.py) -DPYTHON_LIBRARY=$CONDA_PREFIX/libpython3.6m.dylib"
 CMAKE_ARGS=()
 
 # Default leveldb from conda-forge doesn't work. If you want to use leveldb,
@@ -33,7 +33,8 @@ CMAKE_ARGS+=("-DUSE_LEVELDB=OFF")
 # This installation defaults to using MKL because it is much faster. If you
 # want to build without MKL then you should also remove mkl from meta.yaml in
 # addition to removing the flags below
-CMAKE_ARGS+=("-DBLAS=MKL")
+CMAKE_ARGS+=("-DBLAS=Eigen")
+#CMAKE_ARGS+=("-DMKL_INCLUDE_DIR=$CONDA_PREFIX/include")
 
 # There is a separate build folder for CUDA builds
 CMAKE_ARGS+=("-DUSE_CUDA=OFF")
@@ -52,9 +53,10 @@ else
   make "-j$(nproc)"
 fi
 
-make install/fast
+
+#make install/fast
 
 # Python libraries got installed to wrong place, so move them
 # to the right place. See https://github.com/caffe2/caffe2/issues/1015
-echo "Installing Python to $SP_DIR"
-mv $PREFIX/caffe2 $SP_DIR
+#echo "Installing Python to $SP_DIR"
+#mv $PREFIX/caffe2 $SP_DIR
