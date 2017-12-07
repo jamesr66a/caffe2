@@ -31,4 +31,9 @@ def beam_search(dec_out, avg_attn, scores_t) -> ():
         tokens_t_int64 = best_tokens_per_hypo.FlattenToVec()\
             .Gather(best_indices).Cast(to=2)
 
+        # TODO: with metaprogramming, call state_copy. CNN conceptual example:
+        # for i in range (self.num_layers):
+        #   for j in range(self.conv_window - 1):
+        #     state_copy('hidden_state_{}_{}'.format(i, j))
+
         timestep += 1

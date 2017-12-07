@@ -1,0 +1,7 @@
+[["state", [6, 1, 20], "float32"],  ["hypo_t", [1, 6], "int32"]]
+state_copy
+["state"]
+
+def state_copy(state, hypo_t) -> (state):
+  state_flattened, _ = state.Reshape(shape=[5, -1])
+  state = state_flattened.Gather(hypo_t).Copy()
