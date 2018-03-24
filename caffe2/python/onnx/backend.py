@@ -50,6 +50,7 @@ from caffe2.python.onnx.helper import dummy_name
 import caffe2.python._import_c_extension as C
 
 import warnings
+import zipfile
 
 def force_unicode(s):
     try:
@@ -664,9 +665,13 @@ class Caffe2Backend(Backend):
                          list(pred_mh.Proto().external_input))
 
     @classmethod
-    def _direct_initialize_parameters(cls, initializer, ws, device_option):
+    def _direct_initialize_parameters(cls, initializer, ws, device_option, raw_params=None):
         for tp in initializer:
-            ws.FeedBlob(tp.name, onnx.numpy_helper.to_array(tp), device_option)
+            if tp.name in raw_params:
+                #TODO: dtype
+                ws.FeedBlob(tp.name, np.frombuffer(raw_params[tp.name], dtype=np.float32).reshape(tuple(tp.dims)))
+            else:
+                ws.FeedBlob(tp.name, onnx.numpy_helper.to_array(tp), device_option)
 
     @classmethod
     def _direct_initialize_inputs(cls, inputs, initialized, ws, device_option):
@@ -689,7 +694,16 @@ class Caffe2Backend(Backend):
         return out
 
     @classmethod
-    def prepare(cls, model, device='CPU', **kwargs):
+    def prepare_zip_archive(cls, zip_path, device='CPU', **kwargs):
+        raw_params = {}
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            model_proto = onnx.load(z.open('__MODEL_PROTO', 'r'))
+            for tp in model_proto.graph.initializer:
+                raw_params[tp.name] = z.open(tp.name, 'r').read()
+        return cls.prepare(model_proto, device, raw_params, **kwargs)
+
+    @classmethod
+    def prepare(cls, model, device='CPU', raw_params=None, **kwargs):
         '''
         For Onnx Caffe2Backend, we require that init_graph don't initialize the actual input of the predict_graph,
 
@@ -723,7 +737,7 @@ class Caffe2Backend(Backend):
         # Build the C++ backend
         # TODO: build a predictor that supports GPU
         #       And for RNN nets, we need to avoid adding init_net
-        if device == 'CPU' and not rnn_nodes:
+        if False:
             c2_rnn_ops = []
             if rnn_nodes:
                 init_model = ModelProto()
@@ -762,6 +776,7 @@ class Caffe2Backend(Backend):
                 model.graph.initializer,
                 ws,
                 device_option,
+                raw_params,
             )
 
             initialized = {init.name for init in model.graph.initializer}
@@ -927,6 +942,8 @@ class Caffe2Backend(Backend):
 
 
 prepare = Caffe2Backend.prepare
+
+prepare_zip_archive = Caffe2Backend.prepare_zip_archive
 
 run_node = Caffe2Backend.run_node
 

@@ -949,12 +949,14 @@ void Caffe2Backend::OnnxToCaffe2(
   pred_net->set_name(onnx_model.graph().name() + "_predict");
 
   // Convert initializer if necessary
-  if (include_initializers) {
-    for (const auto& tp : onnx_model.graph().initializer()) {
-      auto* c2_op = init_net->add_op();
-      BuildTensorFillingOp(c2_op, tp);
-    }
-  }
+  // if (include_initializers) {
+  //   for (const auto& tp : onnx_model.graph().initializer()) {
+  //     if (!tp.has_external_data_ref()) {
+  //       auto* c2_op = init_net->add_op();
+  //       BuildTensorFillingOp(c2_op, tp);
+  //     }
+  //   }
+  // }
 
   auto name_set = AllNamesInGraph(init_model.graph());
   auto name_set_pred = AllNamesInGraph(pred_model.graph());
